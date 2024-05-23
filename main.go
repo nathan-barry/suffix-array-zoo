@@ -1,19 +1,14 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func main() {
-	text := "banana"
+	text := loadFromTextFile("data/man-in-the-arena.txt")
 
-	SA := naiveSolution(text)
+	SA := NewSuffixArray(text)
 
-	printSuffixArray(text, SA)
-}
+	naiveCA(SA)
 
-func printSuffixArray(text string, SA []int) {
-	for _, i := range SA {
-		fmt.Printf("%v : %v\n", i, text[i:])
-	}
+	fmt.Printf("Arena: contains %v, index %v\n", SA.Contains("arena"), SA.Find("arena"))
+	fmt.Printf("Poop: contains %v, index %v\n", SA.Contains("poop"), SA.Find("poop"))
 }
