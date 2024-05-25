@@ -6,11 +6,9 @@ This repo contains multiple implementation of suffix array construction algorith
 - [X] Add naive construction algorithm
 - [X] Load text files
 - [X] Add binary search exact match
-- [ ] Implement MM 1990
 - [ ] Implement Skew 2003
 - [ ] Implement SA-IS 2009
 - [ ] Implement eSAIS
-- [ ]
 
 ## Papers
 - [X] Suffix Arrays: A New Method for On-Line String Searches, Manber & Meyers (1990)
@@ -30,3 +28,9 @@ This repo contains multiple implementation of suffix array construction algorith
 - [ ] Yuta Mori's DivSufSort "fastest known suffix algo in main memory" as of 2017
 - [ ] Ilya Grebnov's even faster implementation 
 - [ ] Look at google research's SA-IS extern memory implementation
+
+## DC3/Skew Resources
+- Simple Linear Work Suffix Array Construction (2003)
+- A Taxonomy of Suffix Array Construction Algorithms (2007)
+- [Mark Ormesher Notes](https://gist.github.com/markormesher/59b990fba09972b4737e7ed66912e044)
+- [Sebastian Wild Video](https://www.youtube.com/watch?v=DAzGCjMHZws)

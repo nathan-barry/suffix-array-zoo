@@ -2,7 +2,7 @@ package main
 
 import "sort"
 
-func naiveCA(SA SuffixArray) {
+func naiveSolution(SA SuffixArray) {
 	// Initialize suffix array
 	for i := range SA.indices {
 		SA.indices[i] = i
