@@ -5,12 +5,12 @@ import (
 	"log"
 )
 
-// %%%%%%%%%% Initialization %%%%%%%%%%
-
 const (
 	NAIVE    = "naive"
 	DC3_SKEW = "dc3_skew"
 )
+
+// %%%%%%%%%% Initialization %%%%%%%%%%
 
 type SuffixArray struct {
 	data []byte
@@ -25,7 +25,7 @@ func NewSuffixArray(data []byte, algorithm string) SuffixArray {
 
 	switch algorithm {
 	case NAIVE:
-		sa.naiveSolution()
+		sa.naive()
 	case DC3_SKEW:
 		sa.dc3Skew()
 	default:

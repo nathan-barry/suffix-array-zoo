@@ -3,10 +3,12 @@ package main
 import "fmt"
 
 func main() {
-	text := loadBytesFromTextFile("data/man-in-the-arena.txt")
+	// data := loadBytesFromTextFile("data/man-in-the-arena.txt")
+	data := []byte("processing")
+	saca := DC3_SKEW // Suffix Array Construction Algorithm
 
-	SA := NewSuffixArray(text, NAIVE)
+	sa := NewSuffixArray(data, saca)
 
-	fmt.Printf("Arena: contains %v, index %v\n", SA.Contains("arena"), SA.Find("arena"))
-	fmt.Printf("Poop: contains %v, index %v\n", SA.Contains("poop"), SA.Find("poop"))
+	fmt.Printf("Arena: contains %v, index %v\n", sa.Contains("arena"), sa.Find("arena"))
+	fmt.Printf("Poop: contains %v, index %v\n", sa.Contains("poop"), sa.Find("poop"))
 }
