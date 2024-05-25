@@ -1,8 +1,11 @@
 package main
 
-import "sort"
+func (sa *SuffixArray) dc3Skew() {
+	// Append 3 sentinel end characters
+	for i := 0; i < 3; i++ {
+		sa.sa = append(sa.sa, 0)
+	}
 
-func dc3Skew(SA SuffixArray) {
 	// TODO
 	// 1. Split text into S1, S2 triples, concat for S12
 	//	- Concat them to make S12 (with indices?)
@@ -15,13 +18,21 @@ func dc3Skew(SA SuffixArray) {
 	//	- Start with left of S0 and S12, compare and insert into
 	//	  final SA with trick (look at gist notes for how)
 
-	// Initialize suffix array
-	for i := range SA.indices {
-		SA.indices[i] = i
-	}
+}
 
-	// Sort indices in lexicographical order
-	sort.Slice(SA.indices, func(i, j int) bool {
-		return (*SA.text)[SA.indices[i]:] < (*SA.text)[SA.indices[j]:]
-	})
+// %%%%%%%%%% Helpers %%%%%%%%%%
+
+// Stably sort a[0..n-1] to b[0..n-1] with keys in 0..K from r
+func radixPass(a, b, r []int, n, K int) {
+
+}
+
+// lexicographic order for pairs
+func leq2(a1, a2, b1, b2 int) bool {
+	return (a1 < b1) || (a1 == b1 && a2 <= b2)
+}
+
+// lexicographic order for triples
+func leq3(a1, a2, a3, b1, b2, b3 int) bool {
+	return (a1 < b1) || (a1 == b1 && leq2(a2, a3, b2, b3))
 }

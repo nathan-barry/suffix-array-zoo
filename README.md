@@ -11,16 +11,17 @@ This repo contains multiple implementation of suffix array construction algorith
 - [ ] Implement eSAIS
 
 ## Papers
-- [X] Suffix Arrays: A New Method for On-Line String Searches, Manber & Meyers (1990)
-- [X] Simple Linear Work Suffix Array Construction (2003) (DC3/skew)
+- [X] Suffix Arrays: A New Method for On-Line String Searches (1990)
+- [X] Simple Linear Work Suffix Array Construction (2003) - DC3/skew
 - [ ] Fast Lightweight Suffix Array Construction and Checking (2003)
-- [ ] Replacing Suffix Trees with Enhanced Suffix Arrays, Abouelhoda, Kurtz & Ohlebusch (2004)
+- [ ] Replacing Suffix Trees with Enhanced Suffix Arrays (2004)
+- [X] Linear Work Suffix Array Construction (2006) - DC3/skew
 - [X] A Taxonomy of Suffix Array Construction Algorithms (2007)
 - [ ] Better External Memory Suffix Array Construction (2008)
 - [ ] Scalable Parallel Suffix Array Construction (2008)
-- [ ] Linear Suffix Array Construction by Almost Pure Induced-Sorting, Nong, Zhang & Chan (2009) (SA-IS)
+- [ ] Linear Suffix Array Construction by Almost Pure Induced-Sorting (2009) - SA-IS
 - [ ] Optimal In-Place Suffix Sorting (2016)
-- [X] Deduplicating Training Data Makes Language Models Better, Google Research (2022)
+- [X] Deduplicating Training Data Makes Language Models Better (2022)
     - Based on SA-IS, modified to use external memory but original text must fit in memory.
 
 ## Investigate
@@ -31,6 +32,7 @@ This repo contains multiple implementation of suffix array construction algorith
 
 ## DC3/Skew Resources
 - Simple Linear Work Suffix Array Construction (2003)
+- Linear Work Suffix Array Construction (2006)
 - A Taxonomy of Suffix Array Construction Algorithms (2007)
 - [Mark Ormesher Notes](https://gist.github.com/markormesher/59b990fba09972b4737e7ed66912e044)
 - [Sebastian Wild Video](https://www.youtube.com/watch?v=DAzGCjMHZws)

@@ -7,10 +7,10 @@ import (
 
 // %%%%%%%%%% Load Data %%%%%%%%%%
 
-func loadFromTextFile(fileName string) string {
+func loadBytesFromTextFile(fileName string) []byte {
 	content, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return string(content)
+	return content
 }

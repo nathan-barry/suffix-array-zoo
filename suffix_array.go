@@ -2,37 +2,51 @@ package main
 
 import (
 	"fmt"
+	"log"
 )
 
 // %%%%%%%%%% Initialization %%%%%%%%%%
 
+const (
+	NAIVE    = "naive"
+	DC3_SKEW = "dc3_skew"
+)
+
 type SuffixArray struct {
-	text    *string
-	indices []int
-	length  int
+	data []byte
+	sa   []int
 }
 
-func NewSuffixArray(text string) SuffixArray {
-	SA := SuffixArray{
-		text:    &text,
-		indices: make([]int, len(text)),
-		length:  len(text),
+func NewSuffixArray(data []byte, algorithm string) SuffixArray {
+	sa := SuffixArray{
+		data: data,
+		sa:   make([]int, len(data)),
 	}
-	return SA
+
+	switch algorithm {
+	case NAIVE:
+		sa.naiveSolution()
+	case DC3_SKEW:
+		sa.dc3Skew()
+	default:
+		log.Fatal("algorithm not implemented: not valid or typo in name")
+	}
+
+	return sa
 }
 
 // %%%%%%%%%% Search %%%%%%%%%%%%
 
 func (sa *SuffixArray) Contains(text string) bool {
-	l, r := 0, sa.length-1
+	l, r := 0, len(sa.data)-1
 
 	for l <= r {
 		m := (r + l) / 2
-		suffix := (*sa.text)[sa.indices[m] : sa.indices[m]+len(text)]
+		suffix := (sa.data)[sa.sa[m] : sa.sa[m]+len(text)]
 
-		if text == suffix {
+		if text == string(suffix) {
 			return true
-		} else if text < suffix {
+		} else if text < string(suffix) {
 			r = m - 1
 		} else {
 			l = m + 1
@@ -43,15 +57,15 @@ func (sa *SuffixArray) Contains(text string) bool {
 }
 
 func (sa *SuffixArray) Find(text string) int {
-	l, r := 0, sa.length-1
+	l, r := 0, len(sa.data)-1
 
 	for l <= r {
 		m := (r + l) / 2
-		suffix := (*sa.text)[sa.indices[m] : sa.indices[m]+len(text)]
+		suffix := sa.data[sa.sa[m] : sa.sa[m]+len(text)]
 
-		if text == suffix {
-			return sa.indices[m]
-		} else if text < suffix {
+		if text == string(suffix) {
+			return sa.sa[m]
+		} else if text < string(suffix) {
 			r = m - 1
 		} else {
 			l = m + 1
@@ -64,17 +78,17 @@ func (sa *SuffixArray) Find(text string) int {
 // %%%%%%%%%% Printing %%%%%%%%%%
 
 func (sa *SuffixArray) Print() {
-	for _, i := range sa.indices {
-		fmt.Printf("%4d : %v\n", i, (*sa.text)[i:])
+	for _, s_i := range sa.sa { // s_i is the sorted suffix index
+		fmt.Printf("%4d : %v\n", s_i, sa.data[s_i:])
 	}
 }
 
 func (sa *SuffixArray) PrintTruncate(k int) {
-	for _, i := range sa.indices {
-		if i+k <= sa.length {
-			fmt.Printf("%4d : %v\n", i, (*sa.text)[i:i+k])
+	for _, s_i := range sa.sa {
+		if s_i+k <= len(sa.data) {
+			fmt.Printf("%4d : %v\n", s_i, sa.data[s_i:s_i+k])
 		} else {
-			fmt.Printf("%4d : %v\n", i, (*sa.text)[i:i])
+			fmt.Printf("%4d : %v\n", s_i, sa.data[s_i:])
 		}
 	}
 }
