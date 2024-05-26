@@ -5,39 +5,41 @@ import (
 	"log"
 )
 
-const K = 256 // alphabet is a byte
+const BYTE_SIZE = 256
 
-type gram [3]byte
-
+// ALGORITHM OVERVIEW (high level, not exact implementation)
+// 1. Split text into s1, s2 3-grams, concat for s12
+//   - Concat them to make s12
+//   - Radix sort them
+//   - If no repeats, return sorted sa12
+//   - else, run again with r12 as string
+//
+// 2. Induce sa0 from s0 and sa12
+//   - End with sorted sa0 and sorted sa12
+//
+// 3. Merge sa0 and sa12
+//   - Start with left of sa0 and sa12, compare and insert into final sa
 func (sa *SuffixArray) dc3Skew() {
-	// TODO
-	// 1. Split text into S1, S2 triples, concat for S12
-	//	- Concat them to make S12 (with indices?)
-	//	- Radix sort them
-	//	- If no repeats, return SA12
-	//	- Else, run again with numbers as string
-	// 2. Sort S0 with S12
-	//	- End with sorted S0 and sorted S12
-	// 3. Merge S0 and S12
-	//	- Start with left of S0 and S12, compare and insert into
-	//	  final SA with trick (look at gist notes for how)
+	// add sentinel padding to avoid out-of-bounds indexing
 	sa.data = append(sa.data, 0)
 	sa.data = append(sa.data, 0)
 	sa.data = append(sa.data, 0)
 
-	dc3SkewRecurse(sa.data, sa.sa, len(sa.data)-3)
+	dc3SkewRecurse(sa.data, sa.sa, len(sa.data)-3, BYTE_SIZE)
 }
 
-func dc3SkewRecurse(s []byte, sa []int, n int) {
+func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 	n0 := (n + 2) / 3
 	n1 := (n + 1) / 3
 	n2 := n / 3
 
-	n12 := n1 + n2           // number of bytes
-	r12 := make([]int, n12)  // r12[pos in s] = rank
-	sa12 := make([]int, n12) // sa12[rank] = pos in s
+	n12 := n1 + n2              // number of bytes
+	r12 := make([]int, n12)     // r12[pos in s12] = rank
+	sa12 := make([]int, n12)    // sa12[rank-1] = pos in s12
+	name12 := make([]byte, n12) // same as r12 but byte instead
 
 	// Step 0: generate positions of mod 1 and mod 2 suffixes
+	// temporarily store in r12 for memory efficiency
 	for i, j := 0, 0; i < n; i++ {
 		if i%3 != 0 {
 			r12[j] = i
@@ -45,36 +47,79 @@ func dc3SkewRecurse(s []byte, sa []int, n int) {
 		}
 	}
 
-	fmt.Println(n, n0, n1, n2)
-	fmt.Println(n12, r12)
-	fmt.Println(n12, sa12)
-
-	fmt.Printf("byte 3-grams: ")
-	for _, i := range r12 {
-		fmt.Printf("%v ", s[i:i+3])
-	}
-	fmt.Print("\n")
-
+	// Step 1: Sort sa12
 	// lsb radix sort s12 3-grams
-	radixPass(s, r12, sa12, n12, 2) // r12 temp suffix positions, sa12 temp storage
-	fmt.Println(n12, sa12)
+	radixPass(s, r12, sa12, n12, 2, K) // r12 temp suffix positions, sa12 temp storage
+	radixPass(s, sa12, r12, n12, 1, K) // sa12 temp sorted positions, r12 temp storage
+	radixPass(s, r12, sa12, n12, 0, K) // r12 temp sorted positions, sa12 store output
 
-	radixPass(s, sa12, r12, n12, 1) // sa12 temp sorted positions, r12 temp storage
-	radixPass(s, r12, sa12, n12, 0) // r12 temp sorted positions, sa12 temp storage
+	// find lexicographical names of 3-grams and write them to correct place in r12
+	name, prev_c0, prev_c1, prev_c2 := 0, -1, -1, -1
+	for i := 0; i < n12; i++ {
+		cur_c0 := int(s[sa12[i]])
+		cur_c1 := int(s[sa12[i]+1])
+		cur_c2 := int(s[sa12[i]+2])
+		// if current suffix is different from last suffix, update
+		if cur_c0 != prev_c0 || cur_c1 != prev_c1 || cur_c2 != prev_c2 {
+			name++
+			s[sa12[i]] = byte(cur_c0)
+			s[sa12[i]+1] = byte(cur_c1)
+			s[sa12[i]+2] = byte(cur_c2)
+		}
+		// below mimics r1 concat r2
+		if sa12[i]%3 == 1 { // from s1 group
+			r12[sa12[i]/3] = name
+			name12[sa12[i]/3] = byte(name)
+		} else { // from s2 group
+			r12[sa12[i]/3+n2] = name
+			name12[sa12[i]/3] = byte(name)
+		}
+	}
 
-	fmt.Println(n12, sa12)
+	// recurse if names are not yet unique
+	if name < n12 {
+		dc3SkewRecurse(name12, sa12, n12, name)
+		// store unique names in r12 using the suffix array
+		for i := 0; i < n12; i++ {
+			r12[sa12[i]] = i + 1 // r12 starts at 1, not 0
+		}
+	} else {
+		// generate sa12 from r12 directly
+		// sa12 currently holds index of suffix in s, not s12
+		for i := 0; i < n12; i++ {
+			sa12[r12[i]-1] = i // r12 starts at 1, not 0
+		}
+	}
+
+	// Step 2: Sort sa0 from sa12
+	r0 := make([]int, n0)  // r12[pos in s12] = rank
+	sa0 := make([]int, n0) // sa12[rank-1] = pos in s12
+
+	fmt.Printf("n0: %v, n1: %v, n2: %v, n12: %v\n", n0, n1, n2, n12)
+	fmt.Printf("r12: %v, sa12: %v, r0: %v, sa0: %v\n", r12, sa12, r0, sa0)
+
+	// stably sort the i mod 3 == 0 suffixes by rank of the i+1 suffixes
+	for i, j := 0, 0; i < n12; i++ {
+		if sa12[i] < n0 { // note: if (i == n0) > n1, no edge case since end padding?
+			r0[j] = 3 * sa12[i]
+			j++
+		}
+	}
+	// sort by the first character in suffix, gives us sorted sa0 with s index position
+	radixPass(s, r0, sa0, n0, 0, K)
+
+	fmt.Printf("n0: %v, n1: %v, n2: %v, n12: %v\n", n0, n1, n2, n12)
+	fmt.Printf("r12: %v, sa12: %v, r0: %v, sa0: %v\n", r12, sa12, r0, sa0)
+
+	// Step 3: Merge
+	// merge sorted sa0 suffixes and sorted sa12 suffixes
+	for p, t, k := 0, n0-n1, 0; k < n; k++ {
+
+	}
 
 	log.Fatal("end")
 
-	// Debug information
-	fmt.Println(n, n0, n1, n2)
-	fmt.Println(n, string(s))
-	fmt.Println(n, s)
-
 }
-
-// SA[rank] = pos
-// ISA[pos] = rank
 
 // %%%%%%%%%% Helpers %%%%%%%%%%
 
@@ -82,7 +127,7 @@ func dc3SkewRecurse(s []byte, sa []int, n int) {
 // `out`: output array where the sorted positions will be sorted
 // `kth`: passed as 2, 1, then 0
 // Essentially one pass of counting sort
-func radixPass(s []byte, in, out []int, n12, kth int) {
+func radixPass(s []byte, in, out []int, n12, kth, K int) {
 	c := make([]int, K+1)
 
 	// reset counts
@@ -97,7 +142,6 @@ func radixPass(s []byte, in, out []int, n12, kth int) {
 		// ^ byte is seen and the count incremented
 		c[s[in[i]+kth]]++
 	}
-	fmt.Println("count c:", c)
 
 	// turn c into exclusive prefix sums
 	for i, sum := 0, 0; i <= K; i++ {
@@ -106,19 +150,14 @@ func radixPass(s []byte, in, out []int, n12, kth int) {
 		sum += temp // equals n12 at end
 	}
 
-	fmt.Println("prefix sum c:", c)
 	// store sorted positions
-	fmt.Println("0 out:", out)
 	for i := 0; i < n12; i++ {
 		// `s[in[i]+kth]` is the kth byte at that suffix position
 		// c[^] is the prefix sum of that byte
-		fmt.Println("s[in[i]+kth]", s[in[i]+kth])
 		prefix_sum := c[s[in[i]+kth]]
-		fmt.Println("prefix_sum, in[i]", prefix_sum, in[i])
 		out[prefix_sum] = in[i]
 		// increment (part of counting sort)
 		c[s[in[i]+kth]]++
-		fmt.Println(i+1, "out:", out)
 	}
 }
 
@@ -132,41 +171,6 @@ func print3Grams(s []byte, indices []int) {
 	}
 	fmt.Print("\n")
 }
-
-// func gen3grams(s, s12 []byte, n1, n2 int) {
-// 	// Add 3-grams from s1
-// 	for i := 0; i < n1; i++ {
-// 		// fmt.Println(i, s[1+(i*3):1+(i*3)+3], 1+(i*3), 1+(i*3)+3)
-// 		copy(s12[i*3:(i*3)+3], s[1+(i*3):1+(i*3)+3])
-// 	}
-
-// 	// // Add 3-grams from s2
-// 	for i := 0; i < n2; i++ {
-// 		// fmt.Println(i, s[2+(i*3):2+(i*3)+3], 2+(i*3), 2+(i*3)+3)
-// 		copy(s12[(n1+i)*3:((n1+i)*3)+3], s[2+(i*3):2+(i*3)+3])
-// 	}
-// }
-
-// func printGroups(s []byte, n0, n1, n2 int) {
-// 	s0 := make([]byte, n0*3)
-// 	s1 := make([]byte, n1*3)
-// 	s2 := make([]byte, n2*3)
-
-// 	for i := 0; i < n0; i++ {
-// 		s0[i] = s[i*3]
-// 	}
-// 	fmt.Println(n0, string(s0))
-
-// 	for i := 0; i < n1; i++ {
-// 		s1[i] = s[1+i*3]
-// 	}
-// 	fmt.Println(n1, string(s1))
-
-// 	for i := 0; i < n2; i++ {
-// 		s2[i] = s[2+i*3]
-// 	}
-// 	fmt.Println(n2, string(s2))
-// }
 
 // lexicographic order for pairs
 func leq2(a1, a2, b1, b2 int) bool {
