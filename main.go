@@ -4,7 +4,7 @@ import "fmt"
 
 func main() {
 	// data := loadBytesFromTextFile("data/man-in-the-arena.txt")
-	data := []byte("ccbaa")
+	data := []byte("nathan is awesome yabadabadoo")
 	saca := DC3_SKEW // Suffix Array Construction Algorithm
 
 	sa := NewSuffixArray(data, saca)
