@@ -24,18 +24,20 @@ func (sa *SuffixArray) dc3Skew() {
 	sa.data = append(sa.data, 0)
 	sa.data = append(sa.data, 0)
 
+	fmt.Println("Recursing:", sa.data, sa.sa, len(sa.data)-3, BYTE_SIZE)
 	dc3SkewRecurse(sa.data, sa.sa, len(sa.data)-3, BYTE_SIZE)
 }
 
 func dc3SkewRecurse(s []byte, sa []int, n, K int) {
+	fmt.Println("%%%%%%%%%%% RECURSING %%%%%%%%%%%%%")
 	n0 := (n + 2) / 3
 	n1 := (n + 1) / 3
 	n2 := n / 3
 
-	n12 := n1 + n2              // why n12 instead of n12, we'll never know
-	r12 := make([]int, n12+3)   // r12[pos in s12] = rank
-	sa12 := make([]int, n12+3)  // sa12[rank-1] = pos in s12
-	name12 := make([]byte, n12) // same as r12 but byte instead
+	n12 := n1 + n2                // why n12 instead of n12, we'll never know
+	r12 := make([]int, n12+3)     // r12[pos in s12] = rank
+	sa12 := make([]int, n12+3)    // sa12[rank-1] = pos in s12
+	name12 := make([]byte, n12+3) // same as r12 but byte instead
 
 	// Step 0: generate positions of mod 1 and mod 2 suffixes
 	// temporarily store in r12 for memory efficiency
@@ -46,11 +48,16 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 		}
 	}
 
+	fmt.Printf("n0: %v, n1: %v, n2: %v, n12: %v\n", n0, n1, n2, n12)
+	fmt.Printf("text: %v\n", s)
+
 	// Step 1: Sort sa12
 	// lsb radix sort s12 3-grams
 	radixPass(s, r12, sa12, n12, 2, K) // r12 temp suffix positions, sa12 temp storage
 	radixPass(s, sa12, r12, n12, 1, K) // sa12 temp sorted positions, r12 temp storage
 	radixPass(s, r12, sa12, n12, 0, K) // r12 temp sorted positions, sa12 store output
+
+	fmt.Printf("r12: %v, sa12: %v\n", r12, sa12)
 
 	// find lexicographical names of 3-grams and write them to correct place in r12
 	name, prev_c0, prev_c1, prev_c2 := 0, -1, -1, -1
@@ -61,9 +68,9 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 		// if current suffix is different from last suffix, update
 		if cur_c0 != prev_c0 || cur_c1 != prev_c1 || cur_c2 != prev_c2 {
 			name++
-			s[sa12[i]] = byte(cur_c0)
-			s[sa12[i]+1] = byte(cur_c1)
-			s[sa12[i]+2] = byte(cur_c2)
+			prev_c0 = cur_c0
+			prev_c1 = cur_c1
+			prev_c2 = cur_c2
 		}
 		// below mimics r1 concat r2
 		if sa12[i]%3 == 1 { // from s1 group
@@ -76,30 +83,34 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 	}
 
 	// recurse if names are not yet unique
+	fmt.Println("name:", name, n12)
+	fmt.Println("name12:", name12)
 	if name < n12 {
+		fmt.Println("Recursing:", "name12", name12, "sa12", sa12, n12, name)
 		dc3SkewRecurse(name12, sa12, n12, name)
 		// store unique names in r12 using the suffix array
 		for i := 0; i < n12; i++ {
 			r12[sa12[i]] = i + 1 // r12 starts at 1, not 0
 		}
 	} else {
+		fmt.Println("%%%%%%%%%%% DONE RECURSING %%%%%%%%%%%%%")
 		// generate sa12 from r12 directly
 		// sa12 currently holds index of suffix in s, not s12
 		for i := 0; i < n12; i++ {
 			sa12[r12[i]-1] = i // r12 starts at 1, not 0
 		}
 	}
+	fmt.Println("%%%%%%%%%%% POP UP %%%%%%%%%%%%%")
 
 	// Step 2: Sort sa0 from sa12
 	r0 := make([]int, n0)  // r12[pos in s12] = rank
 	sa0 := make([]int, n0) // sa12[rank-1] = pos in s12
 
-	fmt.Printf("n0: %v, n1: %v, n2: %v, n12: %v\n", n0, n1, n2, n12)
 	fmt.Printf("r12: %v, sa12: %v, r0: %v, sa0: %v\n", r12, sa12, r0, sa0)
 
 	// stably sort the i mod 3 == 0 suffixes by rank of the i+1 suffixes
 	for i, j := 0, 0; i < n12; i++ {
-		if sa12[i] < n0 { // note: if (i == n0) > n1, no edge case since end padding?
+		if sa12[i] < n1 { // note: if (i == n0) > n1, no edge case since end padding?
 			r0[j] = 3 * sa12[i]
 			j++
 		}
@@ -111,13 +122,11 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 	fmt.Printf("r12: %v, sa12: %v, r0: %v, sa0: %v\n", r12, sa12, r0, sa0)
 
 	fmt.Printf("\n\nsa12: %v\nr12: %v\n", sa12, r12)
-	temp := "reiosn"
-	for _, s_i := range sa12 { // s_i is the sorted suffix index
-		fmt.Printf("%4d : %v\n", s_i, string(temp[s_i:]))
-	}
 	fmt.Printf("sa0: %v\nr0: %v\n\n\n", sa0, r0)
-	for _, s_i := range sa0 { // s_i is the sorted suffix index
-		fmt.Printf("%4d : %v\n", s_i, string(s[s_i:]))
+
+	fmt.Println(string(s))
+	for i, s_i := range sa12 {
+		fmt.Println(s_i, string(s[getSA12Index(sa12, n1, i)]))
 	}
 
 	// Step 3: Merge
@@ -130,8 +139,6 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 		i12 := getSA12Index(sa12, n1, p12) // pos of current offset s12 suffix in s
 		i0 := sa0[p0]                      // pos of current offset s0 suffix in s
 
-		fmt.Println("\n0 1 2 3 4 5 6 8 9 10")
-		fmt.Println("p r o c e s s i n g")
 		fmt.Printf("sa: %v\n", sa)
 		fmt.Printf("k: %v, p12: %v, p0: %v\n", k, p12, p0)
 		fmt.Printf("i12: %v, i0: %v\n", i12, i0)
@@ -166,6 +173,8 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 			}
 		}
 	}
+
+	fmt.Println("FINAL SA AT THIS LEVEL:", sa)
 }
 
 func getSA12Index(sa12 []int, n1, p12 int) int {
