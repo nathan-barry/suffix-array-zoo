@@ -79,16 +79,16 @@ func (sa *SuffixArray) Find(text string) int {
 
 func (sa *SuffixArray) Print() {
 	for _, s_i := range sa.sa { // s_i is the sorted suffix index
-		fmt.Printf("%4d : %v\n", s_i, sa.data[s_i:])
+		fmt.Printf("%4d : %v\n", s_i, string(sa.data[s_i:]))
 	}
 }
 
 func (sa *SuffixArray) PrintTruncate(k int) {
 	for _, s_i := range sa.sa {
 		if s_i+k <= len(sa.data) {
-			fmt.Printf("%4d : %v\n", s_i, sa.data[s_i:s_i+k])
+			fmt.Printf("%4d : %v\n", s_i, string(sa.data[s_i:s_i+k]))
 		} else {
-			fmt.Printf("%4d : %v\n", s_i, sa.data[s_i:])
+			fmt.Printf("%4d : %v\n", s_i, string(sa.data[s_i:]))
 		}
 	}
 }

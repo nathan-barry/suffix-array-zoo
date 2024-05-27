@@ -32,9 +32,9 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 	n1 := (n + 1) / 3
 	n2 := n / 3
 
-	n12 := n1 + n2              // number of bytes
-	r12 := make([]int, n12)     // r12[pos in s12] = rank
-	sa12 := make([]int, n12)    // sa12[rank-1] = pos in s12
+	n12 := n1 + n2              // why n12 instead of n12, we'll never know
+	r12 := make([]int, n12+3)   // r12[pos in s12] = rank
+	sa12 := make([]int, n12+3)  // sa12[rank-1] = pos in s12
 	name12 := make([]byte, n12) // same as r12 but byte instead
 
 	// Step 0: generate positions of mod 1 and mod 2 suffixes
@@ -110,69 +110,79 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 	fmt.Printf("n0: %v, n1: %v, n2: %v, n12: %v\n", n0, n1, n2, n12)
 	fmt.Printf("r12: %v, sa12: %v, r0: %v, sa0: %v\n", r12, sa12, r0, sa0)
 
+	fmt.Printf("\n\nsa12: %v\nr12: %v\n", sa12, r12)
+	temp := "reiosn"
+	for _, s_i := range sa12 { // s_i is the sorted suffix index
+		fmt.Printf("%4d : %v\n", s_i, string(temp[s_i:]))
+	}
+	fmt.Printf("sa0: %v\nr0: %v\n\n\n", sa0, r0)
+	for _, s_i := range sa0 { // s_i is the sorted suffix index
+		fmt.Printf("%4d : %v\n", s_i, string(s[s_i:]))
+	}
+
 	// Step 3: Merge
 	// merge sorted sa0 suffixes and sorted sa12 suffixes
-	for p, t, k := 0, n0-n1, 0; k < n; k++ {
-		// `p` is the index iterating through sa0
-		// `t` is the index iterating through sa12
+	for k, p0, p12 := 0, 0, 0; k < n; k++ {
 		// `k` is the index iterating through sa
+		// `p0` is the index iterating through sa0
+		// `p12` is the index iterating through sa12
 
-		i := getSA12Index(sa12, n0, t) // pos of current offset 12 suffix
-		j := sa0[p]                    // pos of current offset 0 suffix
+		i12 := getSA12Index(sa12, n1, p12) // pos of current offset s12 suffix in s
+		i0 := sa0[p0]                      // pos of current offset s0 suffix in s
 
-		fmt.Printf("k: %v, p: %v, t: %v\n", k, p, t)
-		fmt.Printf("i: %v, j: %v\n", i, j)
+		fmt.Println("\n0 1 2 3 4 5 6 8 9 10")
+		fmt.Println("p r o c e s s i n g")
+		fmt.Printf("sa: %v\n", sa)
+		fmt.Printf("k: %v, p12: %v, p0: %v\n", k, p12, p0)
+		fmt.Printf("i12: %v, i0: %v\n", i12, i0)
 
-		if sa12Smaller(s, sa12, r12, n0, t, i, j) {
+		if sa12Smaller(s, sa12, r12, n0, p12, i12, i0) {
 			// suffix from sa12 is smaller
-			sa[k] = i
-			t++
-			if t == n12 { // done, only sa0 suffixes left
+			fmt.Println("sa12 is smaller")
+			sa[k] = i12
+			p12++
+			if p12 == n12 { // done, only sa0 suffixes left
+				fmt.Println("DONE, ONLY SA0")
 				k++
-				for p < n0 {
-					sa[k] = sa0[p]
+				for p0 < n0 {
+					sa[k] = sa0[p0]
 					k++
-					p++
+					p0++
 				}
 			}
 		} else {
 			// suffix from sa0 is smaller
-			sa[k] = j
-			p++
-			if p == n0 { // done, only sa12 suffixes left
+			fmt.Println("sa0 is smaller")
+			sa[k] = i0
+			p0++
+			if p0 == n0 { // done, only sa12 suffixes left
 				k++
-				for t < n12 {
-					sa[k] = getSA12Index(sa12, n0, t)
+				for p12 < n12 {
+					fmt.Println("DONE, ONLY SA12")
+					sa[k] = getSA12Index(sa12, n1, p12)
 					k++
-					t++
+					p12++
 				}
 			}
 		}
 	}
 }
 
-func getSA12Index(sa12 []int, n0, t int) int {
-	if sa12[t] < n0 { // suffix is mod 1
-		return sa12[t]*3 + 1
+func getSA12Index(sa12 []int, n1, p12 int) int {
+	if sa12[p12] < n1 { // suffix is mod 1
+		return sa12[p12]*3 + 1
 	} else { // suffix is mod 2
-		return (sa12[t]-n0)*3 + 2
+		return (sa12[p12]-n1)*3 + 2
 	}
 }
 
-func sa12Smaller(s []byte, sa12, r12 []int, n0, t, i, j int) bool {
-	fmt.Printf("s[i]: %v, sa12[t]: %v, n0: %v, s[j]: %v\n", string(s[i]), sa12[t], n0, string(s[j]))
-	fmt.Printf("r12: %v\n", r12)
+func sa12Smaller(s []byte, sa12, r12 []int, n0, p12, i12, i0 int) bool {
+	fmt.Printf("s[i12]: %v, sa12[p12]: %v, n0: %v, s[i0]: %v\n", string(s[i12]), sa12[p12], n0, string(s[i0]))
 
-	if sa12[t] < n0 { // different compares for mod 1 and mod 2 suffixes
-		if leq2(int(s[i]), r12[sa12[t]+n0], int(s[j]), r12[j/3]) {
-			return true
-		}
-	} else {
-		if leq3(int(s[i]), int(s[i+1]), r12[sa12[t]-n0+1], int(s[j]), int(s[j+1]), r12[j/3+n0]) {
-			return true
-		}
+	if sa12[p12] < n0 { // different compares for mod 1 and mod 2 suffixes
+		return leq2(int(s[i12]), r12[sa12[p12]+n0], int(s[i0]), r12[i0/3])
 	}
-	return false
+	return leq3(int(s[i12]), int(s[i12+1]), r12[sa12[p12]-n0+1], int(s[i0]), int(s[i0+1]), r12[i0/3+n0])
 }
 
 // `in`: input array containing the positions of the suffixes to be sorted
