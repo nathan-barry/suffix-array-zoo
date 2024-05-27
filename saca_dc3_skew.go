@@ -115,6 +115,51 @@ func dc3SkewRecurse(s []byte, sa []int, n, K int) {
 	// merge sorted sa0 suffixes and sorted sa12 suffixes
 	for p, t, k := 0, n0-n1, 0; k < n; k++ {
 
+		var i int   // pos of current offset 12 suffix
+		j := sa0[p] // pos of current offset 0 suffix
+
+		if sa12[t] < n0 { // suffix is mod 1
+			i = sa12[t]*3 + 1
+		} else { // suffix is mod 2
+			i = (sa12[t]-n0)*3 + 2
+		}
+
+		if sa12[t] < n0 { // different compares for mod 1 and mod 2 suffixes
+			if leq2(int(s[i]), r12[sa12[t]+n0], int(s[j]), r12[j/3]) {
+				// suffix from sa12 is smaller
+				sa[k] = i
+				t++
+				if t == n12 { // done, only sa0 suffixes left
+					for k++; p < n0; p++ {
+						k++
+						sa[k] = sa0[p]
+					}
+				}
+			} else { // suffix from sa0 is smaller
+				sa[k] = j
+				p++
+				if p == n0 { // done, only sa12 suffixes left
+					for k++; t < n12; t++ {
+						k++
+
+						var q int
+						if sa12[t] < n0 { // suffix is mod 1
+							i = sa12[t]*3 + 1
+						} else { // suffix is mod 2
+							i = (sa12[t]-n0)*3 + 2
+						}
+						sa[k] = q
+					}
+
+				}
+
+			}
+		} else {
+			if leq3(int(s[i]), int(s[i+1]), r0[sa12[t]-n0+1], int(s[j]), int(s[j+1]), r0[j/3+n0]) {
+
+			}
+		}
+
 	}
 
 	log.Fatal("end")
@@ -161,6 +206,7 @@ func radixPass(s []byte, in, out []int, n12, kth, K int) {
 	}
 }
 
+// helper to print the strings you're working with
 func print3Grams(s []byte, indices []int) {
 	for _, i := range indices {
 		fmt.Printf("%3d ", i)
